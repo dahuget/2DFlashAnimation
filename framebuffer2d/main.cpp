@@ -34,7 +34,8 @@ std::unique_ptr<RGBA8Texture> cat;
 std::unique_ptr<RGBA8Texture> stars;
 
 /// TODO: declare Framebuffer and color buffer texture
-
+std::unique_ptr<Framebuffer> fb;
+std::unique_ptr<RGBA8Texture> c_buf;
 
 
 int main(int, char**){
@@ -43,36 +44,37 @@ int main(int, char**){
     init();
 
     /// TODO: initialize framebuffer
-
+    fb = std::unique_ptr<Framebuffer>(new Framebuffer());
     /// TODO: initialize color buffer texture, and allocate memory
-
-
+    c_buf = std::unique_ptr<RGBA8Texture>(new RGBA8Texture());
+    c_buf->allocate(width, height);
     /// TODO: attach color texture to framebuffer
+    fb->attach_color_texture(*c_buf); //de-reference pointer to texture
 
 
     Window& window = app.create_window([](Window&){
         glViewport(0,0,width,height);
-
         /// TODO: First draw the scene onto framebuffer
         /// bind and then unbind framebuffer
-
+        fb->bind();
             glClear(GL_COLOR_BUFFER_BIT);
             drawScene(glfwGetTime());
-
-
+        fb->unbind(); // sets to display ie main screen
         /// Render to Window, uncomment the lines and do TODOs
-        //glViewport(0, 0, width, height);
-        //glClear(GL_COLOR_BUFFER_BIT);
-        //fbShader->bind();
+        glViewport(0, 0, width, height);
+        glClear(GL_COLOR_BUFFER_BIT);
+        fbShader->bind();
         /// TODO: Bind texture and set uniforms
-
-
-
-
-
-        //quad->set_attributes(*fbShader);
-        //quad->draw();
-        //fbShader->unbind();
+        glActiveTexture(GL_TEXTURE0);
+        c_buf->bind();
+        fbShader->set_uniform("tex", 0);
+        fbShader->set_uniform("tex_width", float(width));
+        fbShader->set_uniform("tex_height", float(height));
+        quad->set_attributes(*fbShader);
+        quad->draw();
+        /// Also unbind the texture
+        c_buf->unbind();
+        fbShader->unbind();
     });
     window.set_title("FrameBuffer");
     window.set_size(width, height);
@@ -172,6 +174,10 @@ void drawScene(float timeCount)
     TRS *= Eigen::Translation3f(xcord, ycord, 0);
     TRS *= Eigen::AngleAxisf(t + M_PI / 2, Eigen::Vector3f::UnitZ());
     TRS *= Eigen::AlignedScaling3f(0.2f, 0.2f, 1);
+
+    // add heirarchy of transformation
+
+    // transform along bezier curve
 
     quadShader->bind();
     quadShader->set_uniform("M", TRS.matrix());

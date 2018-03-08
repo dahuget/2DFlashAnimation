@@ -18,7 +18,7 @@ void main() {
 #ifdef GAUSSIAN
     ///--- Gaussian convolution
     float std = 2; ///< standard deviation (<.3 disable)
-    // float std = .1; ///< standard deviation (<.3 disable)
+    //float std = .1; ///< standard deviation (<.3 disable)
     vec3 color_tot = vec3(0,0,0);
     float weight_tot = 0;
     int SIZE = 1 + 2 * 3 * int( ceil(std) );
