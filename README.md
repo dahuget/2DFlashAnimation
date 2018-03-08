@@ -1,5 +1,3 @@
-# CSC 305 Introduction to Computer Graphics - Spring 2018
+#### 2D Flash Animation for CSC305 Spring 2018
 
-## Lab Exercises and Code
-
-Please see the wiki [here](https://github.com/arthurfirmino/icg/wiki/) for lab exercise descriptions.
+An OpenGL 2D application that creates a flash animation using geometry and transformations. See the animation here: [link for animation]()
