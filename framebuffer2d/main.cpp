@@ -101,7 +101,7 @@ void init(){
     quadInit(quad);
 
     loadTexture(cat, "nyancat.png");
-    loadTexture(tail, "tail.png");
+    loadTexture(tail, "sparkle.png");
     loadTexture(stars, "background.png");
 }
 
@@ -173,17 +173,31 @@ void drawScene(float timeCount)
 
     float xcord = 0.7*std::cos(t);
     float ycord = 0.7*std::sin(t);
-    TRS *= Eigen::Translation3f(xcord, ycord, 0);
+    //TRS *= Eigen::Translation3f(xcord, ycord, 0);
     //TRS *= Eigen::AngleAxisf(t + M_PI / 2, Eigen::Vector3f::UnitZ());
     TRS *= Eigen::AlignedScaling3f(0.2f, 0.2f, 1);
 
-    // **** Moon transform
-    Transform tail_TRS = TRS;
-    // Make the moon orbit around the earth with 0.2 units of distance
-    //tail *= Eigen::AngleAxisf(freq/MOON_ORBITAL_PERIOD, Eigen::Vector3f::UnitZ());
-    tail_TRS *= Eigen::Translation3f(-1.9, 0.0, 0.0);
-    tail_TRS *= Eigen::AlignedScaling3f(0.9, 0.9, 1.0);
+    // transform along bezier curve
+    Vec2 P0 = Vec2(-4.0f,-4.0f);
+    Vec2 P1 = Vec2(-4.0f, -3.0f);
+    Vec2 P2 = Vec2( 4.0f, 7.0f);
+    Vec2 P3 = Vec2( 8.0f, 4.0f);
+    float scale_t = timeCount*0.1;
+    float x = pow((1-scale_t), 3) *P0(0) + 3*scale_t*pow((1-scale_t),2)*P1(0) + 3*pow(scale_t,2)*(1-scale_t)*P2(0) + pow(scale_t,3)*P3(0);
+    float y = pow((1-scale_t), 3) *P0(1) + 3*scale_t*pow((1-scale_t),2)*P1(1) + 3*pow(scale_t,2)*(1-scale_t)*P2(1) + pow(scale_t,3)*P3(1);
+    TRS *= Eigen::Translation3f(x, y, 0.0);
+
     // add heirarchy of transformation
+    // **** tail next level transformation heirarchy
+    Transform tail_TRS = TRS;
+    tail_TRS *= Eigen::Translation3f(-1.83, 0.3, 0.0);
+    //tail_TRS *= Eigen::AlignedScaling3f(0.9, 0.9, 1.0);
+    //scale_t: make the sun become bigger and smaller over the time!
+    scale_t = 0.1*std::sin(t); // normalized percentage [0,1)
+    //std::cout << scale_t << std::endl;
+    //tail_TRS *= Eigen::Translation3f(-1.85+scale_t, 0.0, 0.0);
+    tail_TRS *= Eigen::AlignedScaling3f(0.85+scale_t, 0.85+scale_t, 1.0);
+
     quadShader->bind();
     quadShader->set_uniform("M", tail_TRS.matrix());
     // Make texture unit 0 active

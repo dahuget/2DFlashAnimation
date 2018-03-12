@@ -12,4 +12,6 @@ target_link_libraries(${EXERCISENAME} ${COMMON_LIBS})
 #--- data need to be copied to run folder
 file(COPY ${PROJECT_SOURCE_DIR}/framebuffer2d/nyancat.png DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY ${PROJECT_SOURCE_DIR}/framebuffer2d/tail.png DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY ${PROJECT_SOURCE_DIR}/framebuffer2d/sparkle.png DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY ${PROJECT_SOURCE_DIR}/framebuffer2d/sparkle2.png DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY ${PROJECT_SOURCE_DIR}/framebuffer2d/background.png DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
