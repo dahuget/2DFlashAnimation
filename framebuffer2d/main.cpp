@@ -31,6 +31,7 @@ std::unique_ptr<Shader> quadShader;
 std::unique_ptr<Shader> fbShader;
 
 std::unique_ptr<RGBA8Texture> cat;
+std::unique_ptr<RGBA8Texture> tail;
 std::unique_ptr<RGBA8Texture> stars;
 
 /// TODO: declare Framebuffer and color buffer texture
@@ -100,6 +101,7 @@ void init(){
     quadInit(quad);
 
     loadTexture(cat, "nyancat.png");
+    loadTexture(tail, "tail.png");
     loadTexture(stars, "background.png");
 }
 
@@ -172,11 +174,29 @@ void drawScene(float timeCount)
     float xcord = 0.7*std::cos(t);
     float ycord = 0.7*std::sin(t);
     TRS *= Eigen::Translation3f(xcord, ycord, 0);
-    TRS *= Eigen::AngleAxisf(t + M_PI / 2, Eigen::Vector3f::UnitZ());
+    //TRS *= Eigen::AngleAxisf(t + M_PI / 2, Eigen::Vector3f::UnitZ());
     TRS *= Eigen::AlignedScaling3f(0.2f, 0.2f, 1);
 
+    // **** Moon transform
+    Transform tail_TRS = TRS;
+    // Make the moon orbit around the earth with 0.2 units of distance
+    //tail *= Eigen::AngleAxisf(freq/MOON_ORBITAL_PERIOD, Eigen::Vector3f::UnitZ());
+    tail_TRS *= Eigen::Translation3f(-1.9, 0.0, 0.0);
+    tail_TRS *= Eigen::AlignedScaling3f(0.9, 0.9, 1.0);
     // add heirarchy of transformation
-
+    quadShader->bind();
+    quadShader->set_uniform("M", tail_TRS.matrix());
+    // Make texture unit 0 active
+    glActiveTexture(GL_TEXTURE0);
+    // Bind the texture to the active unit for drawing
+    tail->bind();
+    // Set the shader's texture uniform to the index of the texture unit we have
+    // bound the texture to
+    quadShader->set_uniform("tex", 0);
+    quad->set_attributes(*quadShader);
+    quad->draw();
+    tail->unbind();
+    quadShader->unbind();
     // transform along bezier curve
 
     quadShader->bind();

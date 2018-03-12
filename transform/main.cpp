@@ -93,12 +93,10 @@ void display(){
     moon_M *= Eigen::Translation3f(P3(0), P3(1), 0.0);
     float scale_t = time_s*0.1; //0.01*std::sin(freq); // normalized percentage [0,1)
     //cout << time_s << endl;
-    //for (float i = 0 ; i < 1 ; i += 0.01 ){
-        float x = pow((1-scale_t), 3) *P0(0) + 3*scale_t*pow((1-scale_t),2)*P1(0) + 3*pow(scale_t,2)*(1-scale_t)*P2(0) + pow(scale_t,3)*P3(0);
-        float y = pow((1-scale_t), 3) *P0(1) + 3*scale_t*pow((1-scale_t),2)*P1(1) + 3*pow(scale_t,2)*(1-scale_t)*P2(1) + pow(scale_t,3)*P3(1);
-        //cout << x << " " << y << endl;
-        moon_M *= Eigen::Translation3f(x, y, 0.0);
-    //}
+    float x = pow((1-scale_t), 3) *P0(0) + 3*scale_t*pow((1-scale_t),2)*P1(0) + 3*pow(scale_t,2)*(1-scale_t)*P2(0) + pow(scale_t,3)*P3(0);
+    float y = pow((1-scale_t), 3) *P0(1) + 3*scale_t*pow((1-scale_t),2)*P1(1) + 3*pow(scale_t,2)*(1-scale_t)*P2(1) + pow(scale_t,3)*P3(1);
+    //cout << x << " " << y << endl;
+    moon_M *= Eigen::Translation3f(x, y, 0.0);
 
     //TODO: Set up the transform hierarchies for the three objects!  
 

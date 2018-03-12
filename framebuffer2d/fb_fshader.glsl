@@ -6,9 +6,9 @@ uniform float tex_height;
 in vec2 uv;
 out vec3 color;
 
-#define GAUSSIAN
+//#define GAUSSIAN
 //#define SOBEL
-//#define NORMAL
+#define NORMAL
 
 #ifdef SOBEL
 float rgb_2_luma(vec3 c){ return .3*c[0] + .59*c[1] + .11*c[2]; }
@@ -17,8 +17,8 @@ float rgb_2_luma(vec3 c){ return .3*c[0] + .59*c[1] + .11*c[2]; }
 void main() {
 #ifdef GAUSSIAN
     ///--- Gaussian convolution
-    float std = 2; ///< standard deviation (<.3 disable)
-    //float std = .1; ///< standard deviation (<.3 disable)
+    //float std = 2; ///< standard deviation (<.3 disable)
+    float std = .1; ///< standard deviation (<.3 disable)
     vec3 color_tot = vec3(0,0,0);
     float weight_tot = 0;
     int SIZE = 1 + 2 * 3 * int( ceil(std) );
