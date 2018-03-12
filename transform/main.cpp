@@ -4,6 +4,7 @@
 #include "OpenGP/GL/glfw_helpers.h"
 #include "Mesh/Mesh.h"
 #include <iostream>
+#include <math.h>
 
 using namespace std;
 using namespace OpenGP;
@@ -23,6 +24,31 @@ Mesh moon;
 Mesh triangle;
 
 void init();
+std::vector<Vec2> controlPoints;
+
+// de Casteljau's method
+int getPt( float n1 , float n2 , float perc )
+{
+    float diff = n2 - n1;
+
+    return n1 + ( diff * perc );
+}
+// de Casteljau's method
+/*for( float i = 0 ; i < 1 ; i += 0.01 )
+{
+    // The Green Line
+    float xa = getPt(controlPoints.at(0)(0),controlPoints.at(1)(0), i); //getPt( x1 , x2 , i );
+    float ya = getPt(controlPoints.at(0)(1),controlPoints.at(1)(1), i); // ( y1 , y2 , i );
+    float xb = getPt(controlPoints.at(1)(0),controlPoints.at(2)(0), i); //getPt( x2 , x3 , i );
+    float yb = getPt(controlPoints.at(1)(1),controlPoints.at(2)(1), i); //getPt( y2 , y3 , i );
+
+    // The Black Dot
+    float x = getPt( xa , xb , i );
+    float y = getPt( ya , yb , i );
+
+    cout << x << " " << y << endl;
+    //drawPixel( x , y , COLOR_RED );
+}*/
 
 void display(){
     glClear(GL_COLOR_BUFFER_BIT);
@@ -35,17 +61,44 @@ void display(){
     Transform tri_M = Transform::Identity();
     tri_M *= Eigen::AlignedScaling3f(0.15, 0.15, 1.0);
     tri_M *= Eigen::Translation3f(-4.5, 0.0, 0.0);
-    float x_axis = -4.5+time_s;
-    tri_M *= Eigen::Translation3f(x_axis, 0.0, 0.0);
 
     // how much do i want to move the triangle based on timestamp -> spatial movement
-    float scale_t = 0.01*std::sin(freq); // normalized percentage [0,1)
+    float x_axis = -4.5+time_s;
+    //tri_M *= Eigen::Translation3f(x_axis, 0.0, 0.0);
     //cout << scale_t << endl;
 
     // move on a straight line (change x-coordinate of triangle)
+    tri_M *= Eigen::Translation3f(-4.5+time_s, 0.0, 0.0);
 
     // create a polyline on a bezier curve (statically, 4 control points)
     // print out bezier points, then move triangle along the curve
+    controlPoints = std::vector<Vec2>();
+    controlPoints.push_back(Vec2(-8.0f,-7.0f));
+    controlPoints.push_back(Vec2(-7.0f, -3.0f));
+    controlPoints.push_back(Vec2( -1.0f, 7.0f));
+    controlPoints.push_back(Vec2( 5.0f, 4.0f));
+    //Vec2 vv = Vec2(0.0, 1.0);
+    //cout << controlPoints.at(0)(0) << endl;
+
+    // bezier's p = (1-t)^2 *P0 + 2*(1-t)*t*P1 + t*t*P2
+    // p = (1-t)^3 *P0 + 3*t*(1-t)^2*P1 + 3*t^2*(1-t)*P2 + t^3*P3
+    // t is usually on 0-1. P0, P1, etc are the control points.
+    Vec2 P0 = controlPoints.at(0);
+    Vec2 P1 = controlPoints.at(1);
+    Vec2 P2 = controlPoints.at(2);
+    Vec2 P3 = controlPoints.at(3);
+    Transform moon_M = Transform::Identity();
+    //make the picture of moon smaller
+    moon_M *= Eigen::AlignedScaling3f(0.08, 0.08, 1.0);
+    moon_M *= Eigen::Translation3f(P3(0), P3(1), 0.0);
+    float scale_t = time_s*0.1; //0.01*std::sin(freq); // normalized percentage [0,1)
+    //cout << time_s << endl;
+    //for (float i = 0 ; i < 1 ; i += 0.01 ){
+        float x = pow((1-scale_t), 3) *P0(0) + 3*scale_t*pow((1-scale_t),2)*P1(0) + 3*pow(scale_t,2)*(1-scale_t)*P2(0) + pow(scale_t,3)*P3(0);
+        float y = pow((1-scale_t), 3) *P0(1) + 3*scale_t*pow((1-scale_t),2)*P1(1) + 3*pow(scale_t,2)*(1-scale_t)*P2(1) + pow(scale_t,3)*P3(1);
+        //cout << x << " " << y << endl;
+        moon_M *= Eigen::Translation3f(x, y, 0.0);
+    //}
 
     //TODO: Set up the transform hierarchies for the three objects!  
 
@@ -82,9 +135,8 @@ void display(){
 
     // draw the sun, the earth and the moon
     sun.draw(sun_M.matrix());
-    earth.draw(earth_M.matrix());
-    moon.draw(moon_M.matrix());*/
-
+    earth.draw(earth_M.matrix());*/
+    moon.draw(moon_M.matrix());
     triangle.draw(tri_M.matrix());
 }
 
@@ -133,13 +185,13 @@ void init(){
     quadTCoord.push_back(OpenGP::Vec2(1.0f, 0.0f));
     quadTCoord.push_back(OpenGP::Vec2(1.0f, 1.0f));
     quadTCoord.push_back(OpenGP::Vec2(0.0f, 1.0f));
-    /*sun.loadTexCoords(quadTCoord);
+    sun.loadTexCoords(quadTCoord);
     earth.loadTexCoords(quadTCoord);
-    moon.loadTexCoords(quadTCoord);*/
+    moon.loadTexCoords(quadTCoord);
     triangle.loadTexCoords(quadTCoord);
 
-    /*sun.loadTextures("sun.png");
+    sun.loadTextures("sun.png");
     moon.loadTextures("moon.png");
-    earth.loadTextures("earth.png");*/
-    triangle.loadTextures("triangle.png");
+    earth.loadTextures("earth.png");
+    triangle.loadTextures("triangle2.png");
 }
