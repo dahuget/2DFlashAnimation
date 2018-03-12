@@ -3,7 +3,9 @@
 #include "OpenGP/GL/Eigen.h"
 #include "OpenGP/GL/glfw_helpers.h"
 #include "Mesh/Mesh.h"
+#include <iostream>
 
+using namespace std;
 using namespace OpenGP;
 
 typedef Eigen::Transform<float,3,Eigen::Affine> Transform;
@@ -26,21 +28,26 @@ void display(){
     glClear(GL_COLOR_BUFFER_BIT);
     // the timer measures time elapsed since GLFW was initialized.
     float time_s = glfwGetTime();
+    float freq = M_PI*time_s*SPEED_FACTOR;
     // print out time
-
+    //cout << freq << endl;
     // display a triangle
     Transform tri_M = Transform::Identity();
-    tri_M *= Eigen::AlignedScaling3f(0.2, 0.2, 1.0);
+    tri_M *= Eigen::AlignedScaling3f(0.15, 0.15, 1.0);
+    tri_M *= Eigen::Translation3f(-4.5, 0.0, 0.0);
+    float x_axis = -4.5+time_s;
+    tri_M *= Eigen::Translation3f(x_axis, 0.0, 0.0);
 
     // how much do i want to move the triangle based on timestamp -> spatial movement
+    float scale_t = 0.01*std::sin(freq); // normalized percentage [0,1)
+    //cout << scale_t << endl;
 
     // move on a straight line (change x-coordinate of triangle)
 
     // create a polyline on a bezier curve (statically, 4 control points)
     // print out bezier points, then move triangle along the curve
 
-    //TODO: Set up the transform hierarchies for the three objects!
-    float freq = M_PI*time_s*SPEED_FACTOR;
+    //TODO: Set up the transform hierarchies for the three objects!  
 
     // **** Sun transform
     /*Transform sun_M = Transform::Identity();
