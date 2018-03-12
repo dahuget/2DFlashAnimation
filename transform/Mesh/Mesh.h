@@ -81,6 +81,7 @@ public:
         glBindVertexArray(0);
     }
 
+
     void loadTexCoords(const std::vector<OpenGP::Vec2> &tCoordArray) {
         ///--- Vertex one vertex Array
         glBindVertexArray(_vao);

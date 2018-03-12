@@ -30,6 +30,8 @@ void display(){
 
     // display a triangle
     Transform tri_M = Transform::Identity();
+    tri_M *= Eigen::AlignedScaling3f(0.2, 0.2, 1.0);
+
     // how much do i want to move the triangle based on timestamp -> spatial movement
 
     // move on a straight line (change x-coordinate of triangle)
