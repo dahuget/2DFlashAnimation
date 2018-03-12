@@ -18,6 +18,7 @@ const int SPEED_FACTOR = 1;
 Mesh sun;
 Mesh earth;
 Mesh moon;
+Mesh triangle;
 
 void init();
 
@@ -28,7 +29,7 @@ void display(){
     // print out time
 
     // display a triangle
-
+    Transform tri_M = Transform::Identity();
     // how much do i want to move the triangle based on timestamp -> spatial movement
 
     // move on a straight line (change x-coordinate of triangle)
@@ -40,7 +41,7 @@ void display(){
     float freq = M_PI*time_s*SPEED_FACTOR;
 
     // **** Sun transform
-    Transform sun_M = Transform::Identity();
+    /*Transform sun_M = Transform::Identity();
     sun_M *= Eigen::Translation3f(0.2, 0.0, 0.0);
     sun_M *= Eigen::AngleAxisf(-freq/SUN_ROT_PERIOD, Eigen::Vector3f::UnitZ());
     //scale_t: make the sun become bigger and smaller over the time!
@@ -73,7 +74,9 @@ void display(){
     // draw the sun, the earth and the moon
     sun.draw(sun_M.matrix());
     earth.draw(earth_M.matrix());
-    moon.draw(moon_M.matrix());
+    moon.draw(moon_M.matrix());*/
+
+    triangle.draw(tri_M.matrix());
 }
 
 int main(int, char**){
@@ -97,6 +100,7 @@ void init(){
     sun.init();
     earth.init();
     moon.init();
+    triangle.init();
 
     std::vector<OpenGP::Vec3> quadVert;
     quadVert.push_back(OpenGP::Vec3(-1.0f, -1.0f, 0.0f));
@@ -113,17 +117,20 @@ void init(){
     sun.loadVertices(quadVert, quadInd);
     earth.loadVertices(quadVert, quadInd);
     moon.loadVertices(quadVert, quadInd);
+    triangle.loadVertices(quadVert, quadInd);
 
     std::vector<OpenGP::Vec2> quadTCoord;
     quadTCoord.push_back(OpenGP::Vec2(0.0f, 0.0f));
     quadTCoord.push_back(OpenGP::Vec2(1.0f, 0.0f));
     quadTCoord.push_back(OpenGP::Vec2(1.0f, 1.0f));
     quadTCoord.push_back(OpenGP::Vec2(0.0f, 1.0f));
-    sun.loadTexCoords(quadTCoord);
+    /*sun.loadTexCoords(quadTCoord);
     earth.loadTexCoords(quadTCoord);
-    moon.loadTexCoords(quadTCoord);
+    moon.loadTexCoords(quadTCoord);*/
+    triangle.loadTexCoords(quadTCoord);
 
-    sun.loadTextures("sun.png");
+    /*sun.loadTextures("sun.png");
     moon.loadTextures("moon.png");
-    earth.loadTextures("earth.png");
+    earth.loadTextures("earth.png");*/
+    triangle.loadTextures("triangle.png");
 }
