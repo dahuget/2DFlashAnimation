@@ -18,6 +18,12 @@ const char* quad_vshader =
 const char* quad_fshader =
 #include "quad_fshader.glsl"
 ;
+const char* line_vshader =
+#include "line_vshader.glsl"
+;
+const char* line_fshader =
+#include "line_fshader.glsl"
+;
 
 const float SpeedFactor = 1;
 void init();
@@ -29,6 +35,10 @@ std::unique_ptr<GPUMesh> quad;
 
 std::unique_ptr<Shader> quadShader;
 std::unique_ptr<Shader> fbShader;
+
+std::unique_ptr<Shader> lineShader;
+std::unique_ptr<GPUMesh> line;
+std::vector<Vec2> controlPoints;
 
 std::unique_ptr<RGBA8Texture> cat;
 std::unique_ptr<RGBA8Texture> tail;
@@ -86,6 +96,9 @@ int main(int, char**){
 void init(){
     glClearColor(1,1,1, /*solid*/1.0 );
 
+    // Enable alpha blending so texture backgroudns remain transparent
+    //glEnable (GL_BLEND); glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     fbShader = std::unique_ptr<Shader>(new Shader());
     fbShader->verbose = true;
     fbShader->add_vshader_from_source(fb_vshader);
@@ -103,6 +116,23 @@ void init(){
     loadTexture(cat, "nyancat.png");
     loadTexture(tail, "sparkle.png");
     loadTexture(stars, "background.png");
+
+    lineShader = std::unique_ptr<Shader>(new Shader());
+    lineShader->verbose = true;
+    lineShader->add_vshader_from_source(line_vshader);
+    lineShader->add_fshader_from_source(line_fshader);
+    lineShader->link();
+
+    controlPoints = std::vector<Vec2>();
+    controlPoints.push_back(Vec2(-0.7f,-0.2f));
+    controlPoints.push_back(Vec2(-0.3f, 0.2f));
+    controlPoints.push_back(Vec2( 0.3f, 0.5f));
+    controlPoints.push_back(Vec2( 0.7f, 0.0f));
+
+    line = std::unique_ptr<GPUMesh>(new GPUMesh());
+    line->set_vbo<Vec2>("vposition", controlPoints);
+    std::vector<unsigned int> indices = {0,1,2,3};
+    line->set_triangles(indices);
 }
 
 void quadInit(std::unique_ptr<GPUMesh> &quad) {
@@ -149,6 +179,14 @@ void loadTexture(std::unique_ptr<RGBA8Texture> &texture, const char *filename) {
     texture = std::unique_ptr<RGBA8Texture>(new RGBA8Texture());
     texture->upload_raw(width, height, &image[0]);
 }
+
+/*void drawLine(Vec2 p1, Vec2 p2) {
+    glBegin(GL_LINES);
+      glVertex2f(p1(0), p1(1));
+      glVertex2f(p2(0), p2(1));
+    glEnd();
+    glFlush();
+}*/
 
 void drawScene(float timeCount)
 {
@@ -248,6 +286,14 @@ void drawScene(float timeCount)
     quad->draw();
     cat->unbind();
     quadShader->unbind();
+
+    lineShader->bind();
+    // Draw line red
+    lineShader->set_uniform("selection", -1); // highlight the selected vertex blue
+    line->set_attributes(*lineShader);
+    line->set_mode(GL_LINE_STRIP); // feed in points, and then it makes a line with the points
+    line->draw();
+    lineShader->unbind();
 
     glDisable(GL_BLEND);
 }
