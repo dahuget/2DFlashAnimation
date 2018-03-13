@@ -50,6 +50,7 @@ int getPt( float n1 , float n2 , float perc )
     //drawPixel( x , y , COLOR_RED );
 }*/
 
+
 void display(){
     glClear(GL_COLOR_BUFFER_BIT);
     // the timer measures time elapsed since GLFW was initialized.

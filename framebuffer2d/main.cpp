@@ -3,7 +3,7 @@
 
 using namespace OpenGP;
 
-const int width=720, height=720;
+const int width=1000, height=1000;
 typedef Eigen::Transform<float,3,Eigen::Affine> Transform;
 
 const char* fb_vshader =
@@ -177,11 +177,33 @@ void drawScene(float timeCount)
     //TRS *= Eigen::AngleAxisf(t + M_PI / 2, Eigen::Vector3f::UnitZ());
     TRS *= Eigen::AlignedScaling3f(0.2f, 0.2f, 1);
 
-    // transform along bezier curve
-    Vec2 P0 = Vec2(-4.0f,-4.0f);
+    // transform along bezier curve (bottom left to top right curve)
+    /*Vec2 P0 = Vec2(-4.0f,-4.0f);
     Vec2 P1 = Vec2(-4.0f, -3.0f);
     Vec2 P2 = Vec2( 4.0f, 7.0f);
     Vec2 P3 = Vec2( 8.0f, 4.0f);
+    // curly q
+    Vec2 P0 = Vec2(6.0f,-4.0f);
+    Vec2 P1 = Vec2(0.0f, 10.5f);
+    Vec2 P2 = Vec2(-7.0f, -8.0f);
+    Vec2 P3 = Vec2(6.0f, 2.0f);
+    //ease in/out
+    Vec2 P0 = Vec2(-3.0f,-5.0f);
+    Vec2 P1 = Vec2(6.0f, -3.0f);
+    Vec2 P2 = Vec2(1.0f, 6.0f);
+    Vec2 P3 = Vec2(4.0f, 4.0f);
+    //ease in
+    Vec2 P0 = Vec2(-3.0f,-5.0f);
+    Vec2 P1 = Vec2(5.0f, -5.0f);
+    Vec2 P2 = Vec2(5.0f, 5.5f);
+    Vec2 P3 = Vec2(6.0f, 7.0f);*/
+    //ease out
+    Vec2 P0 = Vec2(-3.0f,-5.0f);
+    Vec2 P1 = Vec2(-2.5f, -4.0f);
+    Vec2 P2 = Vec2(0.0f, 4.0f);
+    Vec2 P3 = Vec2(4.5f, 4.5f);
+
+
     float scale_t = timeCount*0.1;
     float x = pow((1-scale_t), 3) *P0(0) + 3*scale_t*pow((1-scale_t),2)*P1(0) + 3*pow(scale_t,2)*(1-scale_t)*P2(0) + pow(scale_t,3)*P3(0);
     float y = pow((1-scale_t), 3) *P0(1) + 3*scale_t*pow((1-scale_t),2)*P1(1) + 3*pow(scale_t,2)*(1-scale_t)*P2(1) + pow(scale_t,3)*P3(1);
