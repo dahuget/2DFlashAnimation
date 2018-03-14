@@ -3,7 +3,8 @@
 
 using namespace OpenGP;
 
-const int width=1000, height=1000;
+const int width=720, height=720;
+#define POINTSIZE 10.0f
 typedef Eigen::Transform<float,3,Eigen::Affine> Transform;
 
 const char* fb_vshader =
@@ -62,13 +63,13 @@ int main(int, char**){
     fb = std::unique_ptr<Framebuffer>(new Framebuffer());
     /// TODO: initialize color buffer texture, and allocate memory
     c_buf = std::unique_ptr<RGBA8Texture>(new RGBA8Texture());
-    c_buf->allocate(width, height);
+    c_buf->allocate(2*width, 2*height);
     /// TODO: attach color texture to framebuffer
     fb->attach_color_texture(*c_buf); //de-reference pointer to texture
 
 
     Window& window = app.create_window([](Window&){
-        glViewport(0,0,width,height);
+        glViewport(0,0,2*width,2*height);
         /// TODO: First draw the scene onto framebuffer
         /// bind and then unbind framebuffer
         fb->bind();
@@ -76,7 +77,7 @@ int main(int, char**){
             drawScene(glfwGetTime());
         fb->unbind(); // sets to display ie main screen
         /// Render to Window, uncomment the lines and do TODOs
-        glViewport(0, 0, width, height);
+        glViewport(0, 0, 2*width, 2*height);
         glClear(GL_COLOR_BUFFER_BIT);
         fbShader->bind();
         /// TODO: Bind texture and set uniforms
