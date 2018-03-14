@@ -141,10 +141,10 @@ void init(){
     lineShader->link();
 
     controlPoints = std::vector<Vec2>();
-    controlPoints.push_back(Vec2(-0.7f,-0.2f));
-    controlPoints.push_back(Vec2(-0.3f, 0.2f));
-    controlPoints.push_back(Vec2( 0.3f, 0.5f));
-    controlPoints.push_back(Vec2( 0.7f, 0.0f));
+    controlPoints.push_back(Vec2(-0.7f,-0.2f)); //P0
+    controlPoints.push_back(Vec2(-0.3f, 0.2f)); //P1
+    controlPoints.push_back(Vec2( 0.3f, 0.5f)); //P2
+    controlPoints.push_back(Vec2( 0.7f, 0.0f)); //P3
 
     line = std::unique_ptr<GPUMesh>(new GPUMesh());
     line->set_vbo<Vec2>("vposition", controlPoints);

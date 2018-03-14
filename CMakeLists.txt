@@ -18,7 +18,7 @@ include(common/GLFW.cmake)
 add_subdirectory(transform)
 add_subdirectory(antialiasing)
 add_subdirectory(framebuffer2d)
-#add_subdirectory(mouse)
+add_subdirectory(mouse)
 add_subdirectory(mouse_framebuffer)
 
 #add_subdirectory(assignment2)

@@ -30,6 +30,8 @@ void init();
 void quadInit(std::unique_ptr<GPUMesh> &quad);
 void loadTexture(std::unique_ptr<RGBA8Texture> &texture, const char* filename);
 void drawScene(float timeCount);
+void drawBackground(Transform TRS);
+void drawObject(Transform TRS, std::unique_ptr<RGBA8Texture> &tex);
 
 std::unique_ptr<GPUMesh> quad;
 
@@ -191,9 +193,88 @@ void drawScene(float timeCount)
 
     float t = timeCount * SpeedFactor;
 
-    // transformation matrix
+    // **** Background transform
     Transform TRS = Transform::Identity();
+    // Draw background
+    drawBackground(TRS);
 
+    // transform along bezier curve
+    // bottom left to top right curve
+    /*Vec2 P0 = Vec2(-4.0f,-4.0f);
+    Vec2 P1 = Vec2(-4.0f, -3.0f);
+    Vec2 P2 = Vec2( 4.0f, 7.0f);
+    Vec2 P3 = Vec2( 8.0f, 4.0f);*/
+    // curly q
+    Vec2 P0 = Vec2(6.0f,-4.0f);
+    Vec2 P1 = Vec2(0.0f, 10.5f);
+    Vec2 P2 = Vec2(-7.0f, -8.0f);
+    Vec2 P3 = Vec2(6.0f, 2.0f);/*
+    //ease in/out
+    Vec2 P0 = Vec2(-3.0f,-5.0f);
+    Vec2 P1 = Vec2(6.0f, -3.0f);
+    Vec2 P2 = Vec2(1.0f, 6.0f);
+    Vec2 P3 = Vec2(4.0f, 4.0f);
+    //ease in
+    Vec2 P0 = Vec2(-3.0f,-5.0f);
+    Vec2 P1 = Vec2(5.0f, -5.0f);
+    Vec2 P2 = Vec2(5.0f, 5.5f);
+    Vec2 P3 = Vec2(6.0f, 7.0f);
+    //ease out
+    Vec2 P0 = Vec2(-3.0f,-5.0f);
+    Vec2 P1 = Vec2(-2.5f, -4.0f);
+    Vec2 P2 = Vec2(0.0f, 4.0f);
+    Vec2 P3 = Vec2(4.5f, 4.5f);*/
+
+    // **** Motorcycle transform
+    TRS *= Eigen::AlignedScaling3f(0.38f, 0.2f, 1.0);
+
+    // Calculate motion along Bezier curve
+    float scale_t = t*0.3;
+    scale_t = fmod(scale_t, 1.0);
+    float x = pow((1-scale_t), 3) *P0(0) + 3*scale_t*pow((1-scale_t),2)*P1(0) + 3*pow(scale_t,2)*(1-scale_t)*P2(0) + pow(scale_t,3)*P3(0);
+    float y = pow((1-scale_t), 3) *P0(1) + 3*scale_t*pow((1-scale_t),2)*P1(1) + 3*pow(scale_t,2)*(1-scale_t)*P2(1) + pow(scale_t,3)*P3(1);
+    TRS *= Eigen::Translation3f(x, y, 0.0);
+
+    // **** Add 2 separate heirarchies of transformation
+    // **** 1. Two Wheels transforms
+    // spinning separate from motorcycle
+    float freq = M_PI*t;
+    Transform wheel1_TRS = TRS;
+    wheel1_TRS *= Eigen::AlignedScaling3f(0.4f, 0.68f, 1.0);
+    wheel1_TRS *= Eigen::Translation3f(-1.8, -0.4, 0.0);
+    wheel1_TRS *= Eigen::AngleAxisf(-freq/*spins clockwise*/, Eigen::Vector3f::UnitZ());
+
+    Transform wheel2_TRS = TRS;
+    wheel2_TRS *= Eigen::AlignedScaling3f(0.4f, 0.68f, 1.0);
+    wheel2_TRS *= Eigen::Translation3f(1.8, -0.4, 0.0);
+    wheel2_TRS *= Eigen::AngleAxisf(-freq/*spins clockwise*/, Eigen::Vector3f::UnitZ());
+
+    // **** 2. Rainbow Sparkle Tail transform
+    // becomes bigger and smaller over time separate from motorcycle
+    Transform tail_TRS = TRS;
+    tail_TRS *= Eigen::Translation3f(-1.83, 0.3, 0.0);
+    scale_t = 0.25*std::sin(freq); // normalized percentage [0,1)
+    tail_TRS *= Eigen::AlignedScaling3f(1.0+scale_t, 1.0+scale_t, 1.0);
+
+    // Draw all objects
+    drawObject(tail_TRS, tail);
+    drawObject(TRS, moto);
+    drawObject(wheel1_TRS, wheel1);
+    drawObject(wheel2_TRS, wheel2);
+
+    /*lineShader->bind();
+    // Draw line red
+    lineShader->set_uniform("selection", -1); // highlight the selected vertex blue
+    line->set_attributes(*lineShader);
+    line->set_mode(GL_LINE_STRIP); // feed in points, and then it makes a line with the points
+    line->draw();
+    lineShader->unbind();*/
+
+    glDisable(GL_BLEND);
+}
+
+void drawBackground(Transform TRS)
+{
     // background
     quadShader->bind();
     quadShader->set_uniform("M", TRS.matrix());
@@ -207,125 +288,21 @@ void drawScene(float timeCount)
     quad->set_attributes(*quadShader);
     quad->draw();
     saltflats->unbind();
+}
 
-    TRS *= Eigen::AlignedScaling3f(0.38f, 0.2f, 1.0);
-
-    // transform along bezier curve
-    // bottom left to top right curve
-    /*Vec2 P0 = Vec2(-4.0f,-4.0f);
-    Vec2 P1 = Vec2(-4.0f, -3.0f);
-    Vec2 P2 = Vec2( 4.0f, 7.0f);
-    Vec2 P3 = Vec2( 8.0f, 4.0f);
-    // curly q
-    Vec2 P0 = Vec2(6.0f,-4.0f);
-    Vec2 P1 = Vec2(0.0f, 10.5f);
-    Vec2 P2 = Vec2(-7.0f, -8.0f);
-    Vec2 P3 = Vec2(6.0f, 2.0f);
-    //ease in/out
-    Vec2 P0 = Vec2(-3.0f,-5.0f);
-    Vec2 P1 = Vec2(6.0f, -3.0f);
-    Vec2 P2 = Vec2(1.0f, 6.0f);
-    Vec2 P3 = Vec2(4.0f, 4.0f);
-    //ease in
-    Vec2 P0 = Vec2(-3.0f,-5.0f);
-    Vec2 P1 = Vec2(5.0f, -5.0f);
-    Vec2 P2 = Vec2(5.0f, 5.5f);
-    Vec2 P3 = Vec2(6.0f, 7.0f);*/
-    //ease out
-    Vec2 P0 = Vec2(-3.0f,-5.0f);
-    Vec2 P1 = Vec2(-2.5f, -4.0f);
-    Vec2 P2 = Vec2(0.0f, 4.0f);
-    Vec2 P3 = Vec2(4.5f, 4.5f);
-
-    // calculate bezier curve
-    float scale_t = t*0.3;
-    scale_t = fmod(scale_t, 1.0);
-    float x = pow((1-scale_t), 3) *P0(0) + 3*scale_t*pow((1-scale_t),2)*P1(0) + 3*pow(scale_t,2)*(1-scale_t)*P2(0) + pow(scale_t,3)*P3(0);
-    float y = pow((1-scale_t), 3) *P0(1) + 3*scale_t*pow((1-scale_t),2)*P1(1) + 3*pow(scale_t,2)*(1-scale_t)*P2(1) + pow(scale_t,3)*P3(1);
-    TRS *= Eigen::Translation3f(x, y, 0.0);
-
-    // **** add heirarchies of transformation
-    // **** 1. two wheels spinning
-    float freq = M_PI*t;
-    Transform wheel1_TRS = TRS;
-    wheel1_TRS *= Eigen::AlignedScaling3f(0.4f, 0.68f, 1.0);
-    wheel1_TRS *= Eigen::Translation3f(-1.8, -0.4, 0.0);
-    wheel1_TRS *= Eigen::AngleAxisf(-freq/*spins clockwise*/, Eigen::Vector3f::UnitZ());
-
-    Transform wheel2_TRS = TRS;
-    wheel2_TRS *= Eigen::AlignedScaling3f(0.4f, 0.68f, 1.0);
-    wheel2_TRS *= Eigen::Translation3f(1.8, -0.4, 0.0);
-    wheel2_TRS *= Eigen::AngleAxisf(-freq/*spins clockwise*/, Eigen::Vector3f::UnitZ());
-
-    // **** 2. sparkle tail becomes bigger and smaller over time
-    Transform tail_TRS = TRS;
-    tail_TRS *= Eigen::Translation3f(-1.83, 0.3, 0.0);
-    scale_t = 0.2*std::sin(t); // normalized percentage [0,1)
-    tail_TRS *= Eigen::AlignedScaling3f(1.0+scale_t, 1.0+scale_t, 1.0);
-
-    quadShader->bind();
-    quadShader->set_uniform("M", tail_TRS.matrix());
-    // Make texture unit 0 active
-    glActiveTexture(GL_TEXTURE0);
-    // Bind the texture to the active unit for drawing
-    tail->bind();
-    // Set the shader's texture uniform to the index of the texture unit we have
-    // bound the texture to
-    quadShader->set_uniform("tex", 0);
-    quad->set_attributes(*quadShader);
-    quad->draw();
-    tail->unbind();
-    quadShader->unbind();
-
+void drawObject(Transform TRS, std::unique_ptr<RGBA8Texture> &tex)
+{
     quadShader->bind();
     quadShader->set_uniform("M", TRS.matrix());
     // Make texture unit 0 active
     glActiveTexture(GL_TEXTURE0);
     // Bind the texture to the active unit for drawing
-    moto->bind();
+    tex->bind();
     // Set the shader's texture uniform to the index of the texture unit we have
     // bound the texture to
     quadShader->set_uniform("tex", 0);
     quad->set_attributes(*quadShader);
     quad->draw();
-    moto->unbind();
+    tex->unbind();
     quadShader->unbind();
-
-    quadShader->bind();
-    quadShader->set_uniform("M", wheel1_TRS.matrix());
-    // Make texture unit 0 active
-    glActiveTexture(GL_TEXTURE0);
-    // Bind the texture to the active unit for drawing
-    wheel1->bind();
-    // Set the shader's texture uniform to the index of the texture unit we have
-    // bound the texture to
-    quadShader->set_uniform("tex", 0);
-    quad->set_attributes(*quadShader);
-    quad->draw();
-    wheel1->unbind();
-    quadShader->unbind();
-
-    quadShader->bind();
-    quadShader->set_uniform("M", wheel2_TRS.matrix());
-    // Make texture unit 0 active
-    glActiveTexture(GL_TEXTURE0);
-    // Bind the texture to the active unit for drawing
-    wheel2->bind();
-    // Set the shader's texture uniform to the index of the texture unit we have
-    // bound the texture to
-    quadShader->set_uniform("tex", 0);
-    quad->set_attributes(*quadShader);
-    quad->draw();
-    wheel2->unbind();
-    quadShader->unbind();
-
-    lineShader->bind();
-    // Draw line red
-    lineShader->set_uniform("selection", -1); // highlight the selected vertex blue
-    line->set_attributes(*lineShader);
-    line->set_mode(GL_LINE_STRIP); // feed in points, and then it makes a line with the points
-    line->draw();
-    lineShader->unbind();
-
-    glDisable(GL_BLEND);
 }
