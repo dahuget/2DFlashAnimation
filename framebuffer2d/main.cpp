@@ -41,6 +41,8 @@ std::unique_ptr<GPUMesh> line;
 std::vector<Vec2> controlPoints;
 
 std::unique_ptr<RGBA8Texture> cat;
+std::unique_ptr<RGBA8Texture> wheel1;
+std::unique_ptr<RGBA8Texture> wheel2;
 std::unique_ptr<RGBA8Texture> tail;
 std::unique_ptr<RGBA8Texture> stars;
 
@@ -97,7 +99,7 @@ void init(){
     glClearColor(1,1,1, /*solid*/1.0 );
 
     // Enable alpha blending so texture backgroudns remain transparent
-    //glEnable (GL_BLEND); glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable (GL_BLEND); glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     fbShader = std::unique_ptr<Shader>(new Shader());
     fbShader->verbose = true;
@@ -113,9 +115,11 @@ void init(){
 
     quadInit(quad);
 
-    loadTexture(cat, "nyancat.png");
+    loadTexture(cat, "moto.png");
+    loadTexture(wheel1, "wheel.png");
+    loadTexture(wheel2, "wheel.png");
     loadTexture(tail, "sparkle.png");
-    loadTexture(stars, "background.png");
+    loadTexture(stars, "saltflats.png");
 
     lineShader = std::unique_ptr<Shader>(new Shader());
     lineShader->verbose = true;
@@ -180,22 +184,15 @@ void loadTexture(std::unique_ptr<RGBA8Texture> &texture, const char *filename) {
     texture->upload_raw(width, height, &image[0]);
 }
 
-/*void drawLine(Vec2 p1, Vec2 p2) {
-    glBegin(GL_LINES);
-      glVertex2f(p1(0), p1(1));
-      glVertex2f(p2(0), p2(1));
-    glEnd();
-    glFlush();
-}*/
-
 void drawScene(float timeCount)
 {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     float t = timeCount * SpeedFactor;
+
     Transform TRS = Transform::Identity();
-    //background.draw(TRS.matrix());
+
     quadShader->bind();
     quadShader->set_uniform("M", TRS.matrix());
     // Make texture unit 0 active
@@ -213,7 +210,7 @@ void drawScene(float timeCount)
     float ycord = 0.7*std::sin(t);
     //TRS *= Eigen::Translation3f(xcord, ycord, 0);
     //TRS *= Eigen::AngleAxisf(t + M_PI / 2, Eigen::Vector3f::UnitZ());
-    TRS *= Eigen::AlignedScaling3f(0.2f, 0.2f, 1);
+    TRS *= Eigen::AlignedScaling3f(0.38f, 0.2f, 1.0);
 
     // transform along bezier curve (bottom left to top right curve)
     /*Vec2 P0 = Vec2(-4.0f,-4.0f);
@@ -242,13 +239,26 @@ void drawScene(float timeCount)
     Vec2 P3 = Vec2(4.5f, 4.5f);
 
 
-    float scale_t = timeCount*0.1;
+    float scale_t = timeCount*0.3;
+    scale_t = fmod(scale_t, 1.0);
     float x = pow((1-scale_t), 3) *P0(0) + 3*scale_t*pow((1-scale_t),2)*P1(0) + 3*pow(scale_t,2)*(1-scale_t)*P2(0) + pow(scale_t,3)*P3(0);
     float y = pow((1-scale_t), 3) *P0(1) + 3*scale_t*pow((1-scale_t),2)*P1(1) + 3*pow(scale_t,2)*(1-scale_t)*P2(1) + pow(scale_t,3)*P3(1);
-    TRS *= Eigen::Translation3f(x, y, 0.0);
+    //TRS *= Eigen::Translation3f(x, y, 0.0);
 
-    // add heirarchy of transformation
-    // **** tail next level transformation heirarchy
+    // add heirarchies of transformation
+    // **** 1. wheels spinning
+    float freq = M_PI*timeCount*1.0/*SPEED_FACTOR*/;
+    Transform wheel1_TRS = TRS;
+    wheel1_TRS *= Eigen::AlignedScaling3f(0.4f, 0.68f, 1.0);
+    wheel1_TRS *= Eigen::Translation3f(-1.8, -0.4, 0.0);
+    wheel1_TRS *= Eigen::AngleAxisf(-freq/30/*SUN_ROT_PERIOD*/, Eigen::Vector3f::UnitZ());
+
+    Transform wheel2_TRS = TRS;
+    wheel2_TRS *= Eigen::AlignedScaling3f(0.4f, 0.68f, 1.0);
+    wheel2_TRS *= Eigen::Translation3f(1.8, -0.4, 0.0);
+    wheel2_TRS *= Eigen::AngleAxisf(-freq/30/*SUN_ROT_PERIOD*/, Eigen::Vector3f::UnitZ());
+
+    // **** 2. sparkle tail
     Transform tail_TRS = TRS;
     tail_TRS *= Eigen::Translation3f(-1.83, 0.3, 0.0);
     //tail_TRS *= Eigen::AlignedScaling3f(0.9, 0.9, 1.0);
@@ -256,7 +266,7 @@ void drawScene(float timeCount)
     scale_t = 0.1*std::sin(t); // normalized percentage [0,1)
     //std::cout << scale_t << std::endl;
     //tail_TRS *= Eigen::Translation3f(-1.85+scale_t, 0.0, 0.0);
-    tail_TRS *= Eigen::AlignedScaling3f(0.85+scale_t, 0.85+scale_t, 1.0);
+    tail_TRS *= Eigen::AlignedScaling3f(1.0+scale_t, 1.0+scale_t, 1.0);
 
     quadShader->bind();
     quadShader->set_uniform("M", tail_TRS.matrix());
@@ -271,7 +281,6 @@ void drawScene(float timeCount)
     quad->draw();
     tail->unbind();
     quadShader->unbind();
-    // transform along bezier curve
 
     quadShader->bind();
     quadShader->set_uniform("M", TRS.matrix());
@@ -285,6 +294,34 @@ void drawScene(float timeCount)
     quad->set_attributes(*quadShader);
     quad->draw();
     cat->unbind();
+    quadShader->unbind();
+
+    quadShader->bind();
+    quadShader->set_uniform("M", wheel1_TRS.matrix());
+    // Make texture unit 0 active
+    glActiveTexture(GL_TEXTURE0);
+    // Bind the texture to the active unit for drawing
+    wheel1->bind();
+    // Set the shader's texture uniform to the index of the texture unit we have
+    // bound the texture to
+    quadShader->set_uniform("tex", 0);
+    quad->set_attributes(*quadShader);
+    quad->draw();
+    wheel1->unbind();
+    quadShader->unbind();
+
+    quadShader->bind();
+    quadShader->set_uniform("M", wheel2_TRS.matrix());
+    // Make texture unit 0 active
+    glActiveTexture(GL_TEXTURE0);
+    // Bind the texture to the active unit for drawing
+    wheel2->bind();
+    // Set the shader's texture uniform to the index of the texture unit we have
+    // bound the texture to
+    quadShader->set_uniform("tex", 0);
+    quad->set_attributes(*quadShader);
+    quad->draw();
+    wheel2->unbind();
     quadShader->unbind();
 
     lineShader->bind();

@@ -102,11 +102,11 @@ void display(){
     //TODO: Set up the transform hierarchies for the three objects!  
 
     // **** Sun transform
-    /*Transform sun_M = Transform::Identity();
+    Transform sun_M = Transform::Identity();
     sun_M *= Eigen::Translation3f(0.2, 0.0, 0.0);
     sun_M *= Eigen::AngleAxisf(-freq/SUN_ROT_PERIOD, Eigen::Vector3f::UnitZ());
     //scale_t: make the sun become bigger and smaller over the time!
-    float scale_t = 0.01*std::sin(freq); // normalized percentage [0,1)
+    scale_t = 0.01*std::sin(freq); // normalized percentage [0,1)
     sun_M *= Eigen::AlignedScaling3f(0.2 +scale_t, 0.2 +scale_t, 1.0);
 
     // **** Earth transform
@@ -123,18 +123,18 @@ void display(){
     earth_M *= Eigen::AlignedScaling3f(0.08, 0.08, 1.0);
 
     // **** Moon transform
-    Transform moon_M = earth_M_prespin;
+    /*Transform moon_M = earth_M_prespin;
     // Make the moon orbit around the earth with 0.2 units of distance
     moon_M *= Eigen::AngleAxisf(freq/MOON_ORBITAL_PERIOD, Eigen::Vector3f::UnitZ());
     moon_M *= Eigen::Translation3f(0.2, 0.0, 0.0);
     // Make the moon spining according to MOON_ROT_PERIOD
     moon_M *= Eigen::AngleAxisf(-freq/MOON_ROT_PERIOD, -Eigen::Vector3f::UnitZ());
     // Make the picture of moon smaller!
-    moon_M *= Eigen::AlignedScaling3f(0.04, 0.04, 1.0);
+    moon_M *= Eigen::AlignedScaling3f(0.04, 0.04, 1.0);*/
 
     // draw the sun, the earth and the moon
     sun.draw(sun_M.matrix());
-    earth.draw(earth_M.matrix());*/
+    earth.draw(earth_M.matrix());
     moon.draw(moon_M.matrix());
     triangle.draw(tri_M.matrix());
 }
