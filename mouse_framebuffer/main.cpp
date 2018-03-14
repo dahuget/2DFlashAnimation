@@ -57,7 +57,7 @@ int main(int, char**){
 
     // Display callback
     Window& window = app.create_window([&](Window&){
-        glViewport(0,0,width,height);
+        glViewport(0,0,2*width,2*height);
         glClear(GL_COLOR_BUFFER_BIT);
         glPointSize(POINTSIZE);
 
@@ -66,7 +66,7 @@ int main(int, char**){
         // Draw line red
         lineShader->set_uniform("selection", -1);
         line->set_attributes(*lineShader);
-        line->set_mode(GL_LINE_STRIP);
+        line->set_mode(GL_LINE_STRIP); //polyline
         line->draw();
 
         // Draw points red and selected point blue
@@ -99,7 +99,7 @@ int main(int, char**){
 
             /// Draw element id's to framebuffer
             selectionFB->bind();
-            glViewport(0,0,width, height);
+            glViewport(0,0,1*width, 1*height);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear color must be 1,1,1,1
             glPointSize(POINTSIZE);
             selectionShader->bind();
