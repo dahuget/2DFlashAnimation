@@ -35,6 +35,7 @@ const char* selection_fshader =
 
 const float SpeedFactor = 1;
 void init();
+void bezierEvaluation(std::vector<Vec2> &bezierPoints, const std::vector<Vec2> controlPoints, std::vector<unsigned int> &indices);
 void deCasteljau(Vec2 &bezierPt, Vec2 P0, Vec2 P1, Vec2 P2, Vec2 P3, float t);
 void getPt(Vec2 &point, Vec2 P1, Vec2 P2, float t);
 void quadInit(std::unique_ptr<GPUMesh> &quad);
@@ -252,10 +253,10 @@ void init(){
     controlPoints.push_back(Vec2( 0.7f, 0.0f)); //P3
 
     controlBPoints = std::vector<Vec2>();
+    std::vector<unsigned int> indicesB;
+    bezierEvaluation(controlBPoints, controlPoints, indicesB);
+    /*// add first control point to bezier curve
     controlBPoints.push_back(Vec2(-0.7f,-0.2f)); //P0
-    /*controlBPoints.push_back(Vec2(-0.3f, 0.2f)); //P1
-    controlBPoints.push_back(Vec2( 0.3f, 0.5f)); //P2
-    controlBPoints.push_back(Vec2( 0.7f, 0.0f)); //P3*/
 
     for(float i = 0; i < 1; i += PRECISION){
         // calculate points on bezier curve using deCasteljau's method
@@ -264,14 +265,8 @@ void init(){
         std::cout << "\nx " << bezierPt(0) << " y " << bezierPt(1) << std::endl;
         controlBPoints.push_back(bezierPt);
     }
-    controlBPoints.push_back(Vec2( 0.7f, 0.0f)); //P3
-
-    std::cout << "bezierPoint Vec2 list contains: \n";
-    for (int i = 0; i < controlBPoints.size(); i++) {
-        std::cout << "x " << controlBPoints.at(i)(0) << "y " << controlBPoints.at(i)(1) << std::endl;
-    }
-
-    std::cout << "bezier points #: " << controlBPoints.size() << std::endl;
+    // add last control point to bezier curve
+    controlBPoints.push_back(Vec2( 0.7f, 0.0f)); //P3*/
 
     line = std::unique_ptr<GPUMesh>(new GPUMesh());
     line->set_vbo<Vec2>("vposition", controlPoints);
@@ -280,11 +275,30 @@ void init(){
 
     bezierLine = std::unique_ptr<GPUMesh>(new GPUMesh());
     bezierLine->set_vbo<Vec2>("vposition", controlBPoints);
-    std::vector<unsigned int> indicesB;
+    /*std::vector<unsigned int> indicesB;
     for(unsigned int i = 0; i < controlBPoints.size(); i++){
         indicesB.push_back(i);
-    }
+    }*/
     bezierLine->set_triangles(indicesB);
+}
+
+void bezierEvaluation(std::vector<Vec2> &bezierPoints, const std::vector<Vec2> controlPoints, std::vector<unsigned int> &indices){
+    // add first control point
+    bezierPoints.push_back(controlPoints.at(0));
+    for(float i = 0; i < 1; i += PRECISION){
+        // calculate points on bezier curve using deCasteljau's method
+        Vec2 bezierPt;
+        deCasteljau(bezierPt, controlPoints.at(0), controlPoints.at(1), controlPoints.at(2), controlPoints.at(3), i);
+        //std::cout << "\nx " << bezierPt(0) << " y " << bezierPt(1) << std::endl;
+        bezierPoints.push_back(bezierPt);
+    }
+    // add last control point
+    bezierPoints.push_back(controlPoints.at(3));
+
+    // add line indices
+    for(unsigned int i = 0; i < bezierPoints.size(); i++){
+        indices.push_back(i);
+    }
 }
 
 void deCasteljau(Vec2 &bezierPt, const Vec2 P0, const Vec2 P1, const Vec2 P2, const Vec2 P3, const float t)
