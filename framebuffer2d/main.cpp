@@ -100,7 +100,7 @@ int main(int, char**){
     Vec2 *selection = nullptr;
     int offsetID = 0;
 
-    Window& window = app.create_window([](Window&){
+    Window& window = app.create_window([&](Window&){
         glViewport(0,0,2*width,2*height);
         /// TODO: First draw the scene onto framebuffer
         /// bind and then unbind framebuffer
@@ -124,7 +124,8 @@ int main(int, char**){
         c_buf->unbind();
         fbShader->unbind();
 
-        /*glClear(GL_COLOR_BUFFER_BIT);
+        glViewport(0,0,2*width,2*height);
+        glClear(GL_COLOR_BUFFER_BIT);
         glPointSize(POINTSIZE);
 
         lineShader->bind();
@@ -140,37 +141,13 @@ int main(int, char**){
         line->set_mode(GL_POINTS);
         line->draw();
 
-        lineShader->unbind();*/
+        lineShader->unbind();
     });
     window.set_title("Assignment 3");
     window.set_size(width, height);
 
-    // Display callback
-    Window& window2 = app.create_window([&](Window&){
-        glViewport(0,0,2*width,2*height);
-        glClear(GL_COLOR_BUFFER_BIT);
-            glPointSize(POINTSIZE);
-
-            lineShader->bind();
-
-            // Draw line red
-            lineShader->set_uniform("selection", -1);
-            line->set_attributes(*lineShader);
-            line->set_mode(GL_LINE_STRIP); //polyline
-            line->draw();
-
-            // Draw points red and selected point blue
-            if(selection!=nullptr) lineShader->set_uniform("selection", int(selection-&controlPoints[0]));
-            line->set_mode(GL_POINTS);
-            line->draw();
-
-            lineShader->unbind();
-        });
-        window2.set_title("Mouse");
-        window2.set_size(width, height);
-
     // Mouse movement callback
-    window2.add_listener<MouseMoveEvent>([&](const MouseMoveEvent &m){
+    window.add_listener<MouseMoveEvent>([&](const MouseMoveEvent &m){
         // Mouse position in clip coordinates
         pixelPosition = m.position;
         Vec2 p = 2.0f*(Vec2(m.position.x()/width,-m.position.y()/height) - Vec2(0.5f,-0.5f));
@@ -183,7 +160,7 @@ int main(int, char**){
     });
 
     // Mouse click callback
-    window2.add_listener<MouseButtonEvent>([&](const MouseButtonEvent &e){
+    window.add_listener<MouseButtonEvent>([&](const MouseButtonEvent &e){
         // Mouse selection case
         if( e.button == GLFW_MOUSE_BUTTON_LEFT && !e.released) {
 
