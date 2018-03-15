@@ -166,7 +166,10 @@ int main(int, char**){
             selection->x() = position.x();
             selection->y() = position.y();
             line->set_vbo<Vec2>("vposition", controlPoints);
-            //bezierLine->set_vbo<Vec2>("vposition", controlBPoints);
+            std::vector<unsigned int> indicesB;
+            bezierEvaluation(controlBPoints, controlPoints, indicesB);
+            bezierLine->set_vbo<Vec2>("vposition", controlBPoints);
+            bezierLine->set_triangles(indicesB);
         }
         position = p;
     });
@@ -186,9 +189,9 @@ int main(int, char**){
             line->set_attributes(*selectionShader);
             line->set_mode(GL_POINTS);
             line->draw();
-            //bezierLine->set_attributes(*selectionShader);
-            //bezierLine->set_mode(GL_POINTS);
-            //bezierLine->draw();
+            bezierLine->set_attributes(*selectionShader);
+            bezierLine->set_mode(GL_POINTS);
+            bezierLine->draw();
             selectionShader->unbind();
             glFlush();
             glFinish();
@@ -206,7 +209,10 @@ int main(int, char**){
                 selection->y() = position.y();
                 selection = nullptr;
                 line->set_vbo<Vec2>("vposition", controlPoints);
-                //bezierLine->set_vbo<Vec2>("vposition", controlPoints);
+                std::vector<unsigned int> indicesB;
+                bezierEvaluation(controlBPoints, controlPoints, indicesB);
+                bezierLine->set_vbo<Vec2>("vposition", controlBPoints);
+                bezierLine->set_triangles(indicesB);
             }
         }
     });
@@ -255,18 +261,6 @@ void init(){
     controlBPoints = std::vector<Vec2>();
     std::vector<unsigned int> indicesB;
     bezierEvaluation(controlBPoints, controlPoints, indicesB);
-    /*// add first control point to bezier curve
-    controlBPoints.push_back(Vec2(-0.7f,-0.2f)); //P0
-
-    for(float i = 0; i < 1; i += PRECISION){
-        // calculate points on bezier curve using deCasteljau's method
-        Vec2 bezierPt;
-        deCasteljau(bezierPt, controlPoints.at(0), controlPoints.at(1), controlPoints.at(2), controlPoints.at(3), i);
-        std::cout << "\nx " << bezierPt(0) << " y " << bezierPt(1) << std::endl;
-        controlBPoints.push_back(bezierPt);
-    }
-    // add last control point to bezier curve
-    controlBPoints.push_back(Vec2( 0.7f, 0.0f)); //P3*/
 
     line = std::unique_ptr<GPUMesh>(new GPUMesh());
     line->set_vbo<Vec2>("vposition", controlPoints);
@@ -275,13 +269,10 @@ void init(){
 
     bezierLine = std::unique_ptr<GPUMesh>(new GPUMesh());
     bezierLine->set_vbo<Vec2>("vposition", controlBPoints);
-    /*std::vector<unsigned int> indicesB;
-    for(unsigned int i = 0; i < controlBPoints.size(); i++){
-        indicesB.push_back(i);
-    }*/
     bezierLine->set_triangles(indicesB);
 }
 
+// Function for efficient Bezier evaluation given four control points (Cubic Bezier)
 void bezierEvaluation(std::vector<Vec2> &bezierPoints, const std::vector<Vec2> controlPoints, std::vector<unsigned int> &indices){
     // add first control point
     bezierPoints.push_back(controlPoints.at(0));
@@ -301,6 +292,8 @@ void bezierEvaluation(std::vector<Vec2> &bezierPoints, const std::vector<Vec2> c
     }
 }
 
+// deCasteljau evaluation of a Cubic Bezier curve
+// Divide and Conquer (subdivision) where t is the precision
 void deCasteljau(Vec2 &bezierPt, const Vec2 P0, const Vec2 P1, const Vec2 P2, const Vec2 P3, const float t)
 {
 
@@ -314,7 +307,7 @@ void deCasteljau(Vec2 &bezierPt, const Vec2 P0, const Vec2 P1, const Vec2 P2, co
 
 }
 
-// interpolation between two points
+// Function to simply interpolate between two points
 void getPt(Vec2 &point, const Vec2 P1, const Vec2 P2, const float t)
 {
 
@@ -414,7 +407,7 @@ void drawScene(float timeCount)
 
 */
 
-    // Bezier curve path control points
+    // Bezier curve control points
     Vec2 P0 = controlPoints.at(0) *3; //Vec2(6.0f,-4.0f);
     Vec2 P1 = controlPoints.at(1) *3; //Vec2(-2.5f, -4.0f);
     Vec2 P2 = controlPoints.at(2) *3; //Vec2(0.0f, 4.0f);
@@ -460,6 +453,7 @@ void drawScene(float timeCount)
     glDisable(GL_BLEND);
 }
 
+// Function to draw scene background
 void drawBackground(Transform TRS)
 {
     // background
@@ -477,6 +471,7 @@ void drawBackground(Transform TRS)
     saltflats->unbind();
 }
 
+// Function to draw scene figure
 void drawFigure(Transform TRS, std::unique_ptr<RGBA8Texture> &tex)
 {
     quadShader->bind();
