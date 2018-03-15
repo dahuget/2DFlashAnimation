@@ -1,3 +1,12 @@
+/*
+ * CSC 305 Assingment 3 Submission
+ *
+ * Starter skeleton code supplied by Aurthor Firmino
+ *
+ * Modified by Dana Huget Mar 17, 2018
+ *
+ */
+
 #include <OpenGP/GL/Application.h>
 #include <OpenGP/external/LodePNG/lodepng.cpp>
 
@@ -55,7 +64,7 @@ std::vector<Vec2> controlPoints;
 std::unique_ptr<GPUMesh> bezierLine;
 std::vector<Vec2> controlBPoints;
 
-/// Selection with framebuffer pointers
+// Selection with framebuffer pointers
 std::unique_ptr<Shader> selectionShader;
 std::unique_ptr<Framebuffer> selectionFB;
 std::unique_ptr<RGBA8Texture> selectionColor;
@@ -67,7 +76,7 @@ std::unique_ptr<RGBA8Texture> wheel2;
 std::unique_ptr<RGBA8Texture> tail;
 std::unique_ptr<RGBA8Texture> saltflats;
 
-/// TODO: declare Framebuffer and color buffer texture
+// Declare Framebuffer and color buffer texture
 std::unique_ptr<Framebuffer> fb;
 std::unique_ptr<RGBA8Texture> c_buf;
 
@@ -77,21 +86,21 @@ int main(int, char**){
     Application app;
     init();
 
-    /// TODO: initialize framebuffer
+    // Initialize framebuffer
     fb = std::unique_ptr<Framebuffer>(new Framebuffer());
-    /// TODO: initialize color buffer texture, and allocate memory
+    // Initialize color buffer texture, and allocate memory
     c_buf = std::unique_ptr<RGBA8Texture>(new RGBA8Texture());
     c_buf->allocate(2*width, 2*height);
-    /// TODO: attach color texture to framebuffer
+    // Attach color texture to framebuffer
     fb->attach_color_texture(*c_buf); //de-reference pointer to texture
 
-    /// Selection shader
+    // Selection shader
     selectionShader = std::unique_ptr<Shader>(new Shader());
     selectionShader->verbose = true;
     selectionShader->add_vshader_from_source(selection_vshader);
     selectionShader->add_fshader_from_source(selection_fshader);
     selectionShader->link();
-    /// Framebuffer for selection shader
+    // Framebuffer for selection shader
     selectionFB = std::unique_ptr<Framebuffer>(new Framebuffer());
     selectionColor = std::unique_ptr<RGBA8Texture>(new RGBA8Texture());
     selectionColor->allocate(width,height);
@@ -108,17 +117,17 @@ int main(int, char**){
 
     Window& window = app.create_window([&](Window&){
         glViewport(0,0,2*width,2*height);
-        /// TODO: First draw the scene onto framebuffer
-        /// bind and then unbind framebuffer
+        // First draws the scene onto framebuffer
+        // Bind and then unbind framebuffer
         fb->bind();
-            glClear(GL_COLOR_BUFFER_BIT);
-            drawScene(glfwGetTime());
+        glClear(GL_COLOR_BUFFER_BIT);
+        drawScene(glfwGetTime());
         fb->unbind(); // sets to display ie main screen
-        /// Render to Window, uncomment the lines and do TODOs
+        // Render to Window
         glViewport(0, 0, 2*width, 2*height);
         glClear(GL_COLOR_BUFFER_BIT);
         fbShader->bind();
-        /// TODO: Bind texture and set uniforms
+        // Bind texture and set uniforms
         glActiveTexture(GL_TEXTURE0);
         c_buf->bind();
         fbShader->set_uniform("tex", 0);
@@ -126,7 +135,7 @@ int main(int, char**){
         fbShader->set_uniform("tex_height", float(height));
         quad->set_attributes(*fbShader);
         quad->draw();
-        /// Also unbind the texture
+        // unbind the texture
         c_buf->unbind();
         fbShader->unbind();
 
@@ -142,6 +151,7 @@ int main(int, char**){
         line->set_mode(GL_LINE_STRIP); //polyline
         line->draw();
 
+        // Draw bezier curve
         lineShader->set_uniform("selection", -1);
         bezierLine->set_attributes(*lineShader);
         bezierLine->set_mode(GL_LINE_STRIP); //polyline
@@ -166,6 +176,7 @@ int main(int, char**){
             selection->x() = position.x();
             selection->y() = position.y();
             line->set_vbo<Vec2>("vposition", controlPoints);
+            bezierLine = std::unique_ptr<GPUMesh>(new GPUMesh());
             std::vector<unsigned int> indicesB;
             bezierEvaluation(controlBPoints, controlPoints, indicesB);
             bezierLine->set_vbo<Vec2>("vposition", controlBPoints);
@@ -189,9 +200,9 @@ int main(int, char**){
             line->set_attributes(*selectionShader);
             line->set_mode(GL_POINTS);
             line->draw();
-            bezierLine->set_attributes(*selectionShader);
+            /*bezierLine->set_attributes(*selectionShader);
             bezierLine->set_mode(GL_POINTS);
-            bezierLine->draw();
+            bezierLine->draw();*/
             selectionShader->unbind();
             glFlush();
             glFinish();
@@ -209,10 +220,11 @@ int main(int, char**){
                 selection->y() = position.y();
                 selection = nullptr;
                 line->set_vbo<Vec2>("vposition", controlPoints);
+                /*bezierLine = std::unique_ptr<GPUMesh>(new GPUMesh());
                 std::vector<unsigned int> indicesB;
                 bezierEvaluation(controlBPoints, controlPoints, indicesB);
                 bezierLine->set_vbo<Vec2>("vposition", controlBPoints);
-                bezierLine->set_triangles(indicesB);
+                bezierLine->set_triangles(indicesB);*/
             }
         }
     });
@@ -252,12 +264,14 @@ void init(){
     lineShader->add_fshader_from_source(line_fshader);
     lineShader->link();
 
+    // Initial hardcoded control points
     controlPoints = std::vector<Vec2>();
     controlPoints.push_back(Vec2(-0.7f,-0.2f)); //P0
     controlPoints.push_back(Vec2(-0.3f, 0.2f)); //P1
     controlPoints.push_back(Vec2( 0.3f, 0.5f)); //P2
     controlPoints.push_back(Vec2( 0.7f, 0.0f)); //P3
 
+    // Bezier curve control points
     controlBPoints = std::vector<Vec2>();
     std::vector<unsigned int> indicesB;
     bezierEvaluation(controlBPoints, controlPoints, indicesB);
@@ -299,11 +313,11 @@ void deCasteljau(Vec2 &bezierPt, const Vec2 P0, const Vec2 P1, const Vec2 P2, co
 
     Vec2 P11, P21, P31, P12, P22;
     getPt(P11, P0, P1, t); // point between P0 and P1
-    getPt(P21, P1, P2, t);
-    getPt(P31, P2, P3, t);
+    getPt(P21, P1, P2, t); // point between P1 and P2
+    getPt(P31, P2, P3, t); // and so on
     getPt(P12, P11, P21, t);
     getPt(P22, P21, P31, t);
-    getPt(bezierPt, P12, P22, t);
+    getPt(bezierPt, P12, P22, t); // final point on bezier curve
 
 }
 
@@ -373,45 +387,11 @@ void drawScene(float timeCount)
     // Draw background
     drawBackground(TRS);
 
-    // transform along bezier curve
-    // bottom left to top right curve
-    /*Vec2 P0 = Vec2(-4.0f,-4.0f);
-    Vec2 P1 = Vec2(-4.0f, -3.0f);
-    Vec2 P2 = Vec2( 4.0f, 7.0f);
-    Vec2 P3 = Vec2( 8.0f, 4.0f);
-    // curly q
-    Vec2 P0 = Vec2(6.0f,-4.0f);
-    Vec2 P1 = Vec2(0.0f, 10.5f);
-    Vec2 P2 = Vec2(-7.0f, -8.0f);
-    Vec2 P3 = Vec2(6.0f, 2.0f);
-    //ease in/out
-    Vec2 P0 = Vec2(-3.0f,-5.0f);
-    Vec2 P1 = Vec2(6.0f, -3.0f);
-    Vec2 P2 = Vec2(1.0f, 6.0f);
-    Vec2 P3 = Vec2(4.0f, 4.0f);
-    //ease in
-    Vec2 P0 = Vec2(-3.0f,-5.0f);
-    Vec2 P1 = Vec2(5.0f, -5.0f);
-    Vec2 P2 = Vec2(5.0f, 5.5f);
-    Vec2 P3 = Vec2(6.0f, 7.0f);
-    //ease out
-    Vec2 P0 = Vec2(-3.0f,-5.0f);
-    Vec2 P1 = Vec2(-2.5f, -4.0f);
-    Vec2 P2 = Vec2(0.0f, 4.0f);
-    Vec2 P3 = Vec2(4.5f, 4.5f);
-
-    controlPoints.push_back(Vec2(-0.7f,-0.2f)); //P0
-    controlPoints.push_back(Vec2(-0.3f, 0.2f)); //P1
-    controlPoints.push_back(Vec2( 0.3f, 0.5f)); //P2
-    controlPoints.push_back(Vec2( 0.7f, 0.0f)); //P3
-
-*/
-
-    // Bezier curve control points
-    Vec2 P0 = controlPoints.at(0) *3; //Vec2(6.0f,-4.0f);
-    Vec2 P1 = controlPoints.at(1) *3; //Vec2(-2.5f, -4.0f);
-    Vec2 P2 = controlPoints.at(2) *3; //Vec2(0.0f, 4.0f);
-    Vec2 P3 = controlPoints.at(3) *3; //Vec2(4.5f, 4.5f);
+    // Bezier path control points
+    Vec2 P0 = controlPoints.at(0) *3;
+    Vec2 P1 = controlPoints.at(1) *3;
+    Vec2 P2 = controlPoints.at(2) *3;
+    Vec2 P3 = controlPoints.at(3) *3;
 
     // **** Motorcycle transform
     TRS *= Eigen::AlignedScaling3f(0.38f, 0.2f, 1.0);
@@ -423,9 +403,9 @@ void drawScene(float timeCount)
     float y_coor = pow((1-scale_t), 3) *P0(1) + 3*scale_t*pow((1-scale_t),2)*P1(1) + 3*pow(scale_t,2)*(1-scale_t)*P2(1) + pow(scale_t,3)*P3(1);
     TRS *= Eigen::Translation3f(x_coor, y_coor, 0.0);
 
-    // **** Add 2 separate heirarchies of transformation
-    // **** 1. Two Wheels transforms
-    // spinning separate from motorcycle
+    // **** Two Separate heirarchies of transformation
+    // **** 1. Two Wheel transforms
+    // rotation separate from motorcycle
     float freq = M_PI*t;
     Transform wheel1_TRS = TRS;
     wheel1_TRS *= Eigen::AlignedScaling3f(0.4f, 0.68f, 1.0);
@@ -456,7 +436,7 @@ void drawScene(float timeCount)
 // Function to draw scene background
 void drawBackground(Transform TRS)
 {
-    // background
+
     quadShader->bind();
     quadShader->set_uniform("M", TRS.matrix());
     // Make texture unit 0 active
@@ -469,11 +449,13 @@ void drawBackground(Transform TRS)
     quad->set_attributes(*quadShader);
     quad->draw();
     saltflats->unbind();
+
 }
 
 // Function to draw scene figure
 void drawFigure(Transform TRS, std::unique_ptr<RGBA8Texture> &tex)
 {
+
     quadShader->bind();
     quadShader->set_uniform("M", TRS.matrix());
     // Make texture unit 0 active
@@ -487,4 +469,5 @@ void drawFigure(Transform TRS, std::unique_ptr<RGBA8Texture> &tex)
     quad->draw();
     tex->unbind();
     quadShader->unbind();
+
 }
