@@ -26,30 +26,6 @@ Mesh triangle;
 void init();
 std::vector<Vec2> controlPoints;
 
-// de Casteljau's method
-int getPt( float n1 , float n2 , float perc )
-{
-    float diff = n2 - n1;
-
-    return n1 + ( diff * perc );
-}
-// de Casteljau's method
-/*for( float i = 0 ; i < 1 ; i += 0.01 )
-{
-    // The Green Line
-    float xa = getPt(controlPoints.at(0)(0),controlPoints.at(1)(0), i); //getPt( x1 , x2 , i );
-    float ya = getPt(controlPoints.at(0)(1),controlPoints.at(1)(1), i); // ( y1 , y2 , i );
-    float xb = getPt(controlPoints.at(1)(0),controlPoints.at(2)(0), i); //getPt( x2 , x3 , i );
-    float yb = getPt(controlPoints.at(1)(1),controlPoints.at(2)(1), i); //getPt( y2 , y3 , i );
-
-    // The Black Dot
-    float x = getPt( xa , xb , i );
-    float y = getPt( ya , yb , i );
-
-    cout << x << " " << y << endl;
-    //drawPixel( x , y , COLOR_RED );
-}*/
-
 
 void display(){
     glClear(GL_COLOR_BUFFER_BIT);

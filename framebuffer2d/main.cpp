@@ -34,6 +34,8 @@ const char* selection_fshader =
 
 const float SpeedFactor = 1;
 void init();
+void deCasteljau(Vec2 &bezierPt, Vec2 P0, Vec2 P1, Vec2 P2, Vec2 P3, float t);
+void getPt(Vec2 &point, Vec2 P1, Vec2 P2, float t);
 void quadInit(std::unique_ptr<GPUMesh> &quad);
 void loadTexture(std::unique_ptr<RGBA8Texture> &texture, const char* filename);
 void drawScene(float timeCount);
@@ -202,7 +204,7 @@ int main(int, char**){
                 selection->y() = position.y();
                 selection = nullptr;
                 line->set_vbo<Vec2>("vposition", controlPoints);
-                bezierLine->set_vbo<Vec2>("vposition", controlBPoints);
+                //bezierLine->set_vbo<Vec2>("vposition", controlPoints);
             }
         }
     });
@@ -250,9 +252,30 @@ void init(){
 
     controlBPoints = std::vector<Vec2>();
     controlBPoints.push_back(Vec2(-0.7f,-0.2f)); //P0
-    controlBPoints.push_back(Vec2(-0.3f, 0.2f)); //P1
+    /*controlBPoints.push_back(Vec2(-0.3f, 0.2f)); //P1
     controlBPoints.push_back(Vec2( 0.3f, 0.5f)); //P2
+    controlBPoints.push_back(Vec2( 0.7f, 0.0f)); //P3*/
+
+    for(float i = 0; i < 1; i += 0.1){
+        // calculate points on bezier curve using deCasteljau's method
+        Vec2 bezierPt;
+        deCasteljau(bezierPt, controlPoints.at(0), controlPoints.at(1), controlPoints.at(2), controlPoints.at(3), i);
+        controlBPoints.push_back(bezierPt);
+    }
     controlBPoints.push_back(Vec2( 0.7f, 0.0f)); //P3
+
+    std::cout << "bezierPoint Vec2 list contains: \n";
+    for (int i = 0; i < controlBPoints.size(); i++) {
+        std::cout << "x " << controlBPoints.at(i)(0) << "y " << controlBPoints.at(i)(1) << std::endl;
+    }
+
+    /*for (int i=0; i<1000; ++i)
+     {
+        point p;
+        float t = static_cast<float>(i)/999.0;
+        bezier(p,a,b,c,d,t);
+        printf("%f %f\n", p.x, p.y);
+        }*/
 
     line = std::unique_ptr<GPUMesh>(new GPUMesh());
     line->set_vbo<Vec2>("vposition", controlPoints);
@@ -261,6 +284,28 @@ void init(){
     std::vector<unsigned int> indices = {0,1,2,3};
     line->set_triangles(indices);
     bezierLine->set_triangles(indices);
+}
+
+void deCasteljau(Vec2 &bezierPt, const Vec2 P0, const Vec2 P1, const Vec2 P2, const Vec2 P3, const float t)
+{
+
+    Vec2 P11, P21, P31, P12, P22;
+    getPt(P11, P0, P1, t); // point between P0 and P1
+    getPt(P21, P1, P2, t);
+    getPt(P31, P2, P3, t);
+    getPt(P12, P11, P21, t);
+    getPt(P22, P21, P31, t);
+    getPt(bezierPt, P12, P22, t);
+
+}
+
+// interpolation between two points
+void getPt(Vec2 &point, const Vec2 P1, const Vec2 P2, const float t)
+{
+
+    point(0) = P1(0) + t*(P2(0)-P1(0)); // x coordinate
+    point(1) = P1(1) + t*(P2(1)-P1(1)); // y coordinate
+
 }
 
 void quadInit(std::unique_ptr<GPUMesh> &quad) {
