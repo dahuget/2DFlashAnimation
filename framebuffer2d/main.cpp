@@ -5,6 +5,7 @@ using namespace OpenGP;
 
 const int width=720, height=720;
 #define POINTSIZE 10.0f
+#define PRECISION 0.1
 typedef Eigen::Transform<float,3,Eigen::Affine> Transform;
 
 const char* fb_vshader =
@@ -256,10 +257,11 @@ void init(){
     controlBPoints.push_back(Vec2( 0.3f, 0.5f)); //P2
     controlBPoints.push_back(Vec2( 0.7f, 0.0f)); //P3*/
 
-    for(float i = 0; i < 1; i += 0.1){
+    for(float i = 0; i < 1; i += PRECISION){
         // calculate points on bezier curve using deCasteljau's method
         Vec2 bezierPt;
         deCasteljau(bezierPt, controlPoints.at(0), controlPoints.at(1), controlPoints.at(2), controlPoints.at(3), i);
+        std::cout << "\nx " << bezierPt(0) << " y " << bezierPt(1) << std::endl;
         controlBPoints.push_back(bezierPt);
     }
     controlBPoints.push_back(Vec2( 0.7f, 0.0f)); //P3
@@ -269,21 +271,20 @@ void init(){
         std::cout << "x " << controlBPoints.at(i)(0) << "y " << controlBPoints.at(i)(1) << std::endl;
     }
 
-    /*for (int i=0; i<1000; ++i)
-     {
-        point p;
-        float t = static_cast<float>(i)/999.0;
-        bezier(p,a,b,c,d,t);
-        printf("%f %f\n", p.x, p.y);
-        }*/
+    std::cout << "bezier points #: " << controlBPoints.size() << std::endl;
 
     line = std::unique_ptr<GPUMesh>(new GPUMesh());
     line->set_vbo<Vec2>("vposition", controlPoints);
-    bezierLine = std::unique_ptr<GPUMesh>(new GPUMesh());
-    bezierLine->set_vbo<Vec2>("vposition", controlBPoints);
     std::vector<unsigned int> indices = {0,1,2,3};
     line->set_triangles(indices);
-    bezierLine->set_triangles(indices);
+
+    bezierLine = std::unique_ptr<GPUMesh>(new GPUMesh());
+    bezierLine->set_vbo<Vec2>("vposition", controlBPoints);
+    std::vector<unsigned int> indicesB;
+    for(unsigned int i = 0; i < controlBPoints.size(); i++){
+        indicesB.push_back(i);
+    }
+    bezierLine->set_triangles(indicesB);
 }
 
 void deCasteljau(Vec2 &bezierPt, const Vec2 P0, const Vec2 P1, const Vec2 P2, const Vec2 P3, const float t)
