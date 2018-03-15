@@ -38,7 +38,7 @@ void quadInit(std::unique_ptr<GPUMesh> &quad);
 void loadTexture(std::unique_ptr<RGBA8Texture> &texture, const char* filename);
 void drawScene(float timeCount);
 void drawBackground(Transform TRS);
-void drawObject(Transform TRS, std::unique_ptr<RGBA8Texture> &tex);
+void drawFigure(Transform TRS, std::unique_ptr<RGBA8Texture> &tex);
 
 std::unique_ptr<GPUMesh> quad;
 
@@ -48,6 +48,8 @@ std::unique_ptr<Shader> fbShader;
 std::unique_ptr<Shader> lineShader;
 std::unique_ptr<GPUMesh> line;
 std::vector<Vec2> controlPoints;
+std::unique_ptr<GPUMesh> bezierLine;
+std::vector<Vec2> controlBPoints;
 
 /// Selection with framebuffer pointers
 std::unique_ptr<Shader> selectionShader;
@@ -136,6 +138,11 @@ int main(int, char**){
         line->set_mode(GL_LINE_STRIP); //polyline
         line->draw();
 
+        lineShader->set_uniform("selection", -1);
+        bezierLine->set_attributes(*lineShader);
+        bezierLine->set_mode(GL_LINE_STRIP); //polyline
+        bezierLine->draw();
+
         // Draw points red and selected point blue
         if(selection!=nullptr) lineShader->set_uniform("selection", int(selection-&controlPoints[0]));
         line->set_mode(GL_POINTS);
@@ -155,6 +162,7 @@ int main(int, char**){
             selection->x() = position.x();
             selection->y() = position.y();
             line->set_vbo<Vec2>("vposition", controlPoints);
+            //bezierLine->set_vbo<Vec2>("vposition", controlBPoints);
         }
         position = p;
     });
@@ -174,6 +182,9 @@ int main(int, char**){
             line->set_attributes(*selectionShader);
             line->set_mode(GL_POINTS);
             line->draw();
+            //bezierLine->set_attributes(*selectionShader);
+            //bezierLine->set_mode(GL_POINTS);
+            //bezierLine->draw();
             selectionShader->unbind();
             glFlush();
             glFinish();
@@ -191,6 +202,7 @@ int main(int, char**){
                 selection->y() = position.y();
                 selection = nullptr;
                 line->set_vbo<Vec2>("vposition", controlPoints);
+                bezierLine->set_vbo<Vec2>("vposition", controlBPoints);
             }
         }
     });
@@ -236,10 +248,19 @@ void init(){
     controlPoints.push_back(Vec2( 0.3f, 0.5f)); //P2
     controlPoints.push_back(Vec2( 0.7f, 0.0f)); //P3
 
+    controlBPoints = std::vector<Vec2>();
+    controlBPoints.push_back(Vec2(-0.7f,-0.2f)); //P0
+    controlBPoints.push_back(Vec2(-0.3f, 0.2f)); //P1
+    controlBPoints.push_back(Vec2( 0.3f, 0.5f)); //P2
+    controlBPoints.push_back(Vec2( 0.7f, 0.0f)); //P3
+
     line = std::unique_ptr<GPUMesh>(new GPUMesh());
     line->set_vbo<Vec2>("vposition", controlPoints);
+    bezierLine = std::unique_ptr<GPUMesh>(new GPUMesh());
+    bezierLine->set_vbo<Vec2>("vposition", controlBPoints);
     std::vector<unsigned int> indices = {0,1,2,3};
     line->set_triangles(indices);
+    bezierLine->set_triangles(indices);
 }
 
 void quadInit(std::unique_ptr<GPUMesh> &quad) {
@@ -304,12 +325,12 @@ void drawScene(float timeCount)
     /*Vec2 P0 = Vec2(-4.0f,-4.0f);
     Vec2 P1 = Vec2(-4.0f, -3.0f);
     Vec2 P2 = Vec2( 4.0f, 7.0f);
-    Vec2 P3 = Vec2( 8.0f, 4.0f);*/
+    Vec2 P3 = Vec2( 8.0f, 4.0f);
     // curly q
     Vec2 P0 = Vec2(6.0f,-4.0f);
     Vec2 P1 = Vec2(0.0f, 10.5f);
     Vec2 P2 = Vec2(-7.0f, -8.0f);
-    Vec2 P3 = Vec2(6.0f, 2.0f);/*
+    Vec2 P3 = Vec2(6.0f, 2.0f);
     //ease in/out
     Vec2 P0 = Vec2(-3.0f,-5.0f);
     Vec2 P1 = Vec2(6.0f, -3.0f);
@@ -324,7 +345,20 @@ void drawScene(float timeCount)
     Vec2 P0 = Vec2(-3.0f,-5.0f);
     Vec2 P1 = Vec2(-2.5f, -4.0f);
     Vec2 P2 = Vec2(0.0f, 4.0f);
-    Vec2 P3 = Vec2(4.5f, 4.5f);*/
+    Vec2 P3 = Vec2(4.5f, 4.5f);
+
+    controlPoints.push_back(Vec2(-0.7f,-0.2f)); //P0
+    controlPoints.push_back(Vec2(-0.3f, 0.2f)); //P1
+    controlPoints.push_back(Vec2( 0.3f, 0.5f)); //P2
+    controlPoints.push_back(Vec2( 0.7f, 0.0f)); //P3
+
+*/
+
+    // Bezier curve path control points
+    Vec2 P0 = controlPoints.at(0) *3; //Vec2(6.0f,-4.0f);
+    Vec2 P1 = controlPoints.at(1) *3; //Vec2(-2.5f, -4.0f);
+    Vec2 P2 = controlPoints.at(2) *3; //Vec2(0.0f, 4.0f);
+    Vec2 P3 = controlPoints.at(3) *3; //Vec2(4.5f, 4.5f);
 
     // **** Motorcycle transform
     TRS *= Eigen::AlignedScaling3f(0.38f, 0.2f, 1.0);
@@ -332,9 +366,9 @@ void drawScene(float timeCount)
     // Calculate motion along Bezier curve
     float scale_t = t*0.3;
     scale_t = fmod(scale_t, 1.0);
-    float x = pow((1-scale_t), 3) *P0(0) + 3*scale_t*pow((1-scale_t),2)*P1(0) + 3*pow(scale_t,2)*(1-scale_t)*P2(0) + pow(scale_t,3)*P3(0);
-    float y = pow((1-scale_t), 3) *P0(1) + 3*scale_t*pow((1-scale_t),2)*P1(1) + 3*pow(scale_t,2)*(1-scale_t)*P2(1) + pow(scale_t,3)*P3(1);
-    TRS *= Eigen::Translation3f(x, y, 0.0);
+    float x_coor = pow((1-scale_t), 3) *P0(0) + 3*scale_t*pow((1-scale_t),2)*P1(0) + 3*pow(scale_t,2)*(1-scale_t)*P2(0) + pow(scale_t,3)*P3(0);
+    float y_coor = pow((1-scale_t), 3) *P0(1) + 3*scale_t*pow((1-scale_t),2)*P1(1) + 3*pow(scale_t,2)*(1-scale_t)*P2(1) + pow(scale_t,3)*P3(1);
+    TRS *= Eigen::Translation3f(x_coor, y_coor, 0.0);
 
     // **** Add 2 separate heirarchies of transformation
     // **** 1. Two Wheels transforms
@@ -357,19 +391,11 @@ void drawScene(float timeCount)
     scale_t = 0.25*std::sin(freq); // normalized percentage [0,1)
     tail_TRS *= Eigen::AlignedScaling3f(1.0+scale_t, 1.0+scale_t, 1.0);
 
-    // Draw all objects
-    drawObject(tail_TRS, tail);
-    drawObject(TRS, moto);
-    drawObject(wheel1_TRS, wheel1);
-    drawObject(wheel2_TRS, wheel2);
-
-    /*lineShader->bind();
-    // Draw line red
-    lineShader->set_uniform("selection", -1); // highlight the selected vertex blue
-    line->set_attributes(*lineShader);
-    line->set_mode(GL_LINE_STRIP); // feed in points, and then it makes a line with the points
-    line->draw();
-    lineShader->unbind();*/
+    // Draw all scene figures
+    drawFigure(tail_TRS, tail);
+    drawFigure(TRS, moto);
+    drawFigure(wheel1_TRS, wheel1);
+    drawFigure(wheel2_TRS, wheel2);
 
     glDisable(GL_BLEND);
 }
@@ -391,7 +417,7 @@ void drawBackground(Transform TRS)
     saltflats->unbind();
 }
 
-void drawObject(Transform TRS, std::unique_ptr<RGBA8Texture> &tex)
+void drawFigure(Transform TRS, std::unique_ptr<RGBA8Texture> &tex)
 {
     quadShader->bind();
     quadShader->set_uniform("M", TRS.matrix());
